@@ -1,0 +1,11 @@
+{
+  "name": "Schengen Tracker",
+  "short_name": "Schengen",
+  "description": "Plan Schengen trips, track your 90/180-day allowance, and export travel history.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "portrait"
+}

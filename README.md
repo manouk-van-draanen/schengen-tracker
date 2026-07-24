@@ -192,4 +192,4 @@ Use native store-enabled builds for testing and release:
 
 ## Version
 
-Current app version: 1.0.0
+Current app version: 1.0.1

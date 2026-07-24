@@ -1,8 +1,8 @@
-# Schengen Tracker
+# Schengly
 
 Plan your trips with confidence and stay safely within the Schengen 90/180-day rule.
 
-Schengen Tracker is a friendly travel-planning app for short-stay travelers who want clear answers, fewer surprises, and more peace of mind.
+Schengly is a friendly travel-planning app for short-stay travelers who want clear answers, fewer surprises, and more peace of mind.
 
 ## Why This App Exists
 

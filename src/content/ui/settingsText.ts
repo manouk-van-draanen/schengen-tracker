@@ -69,7 +69,7 @@ export const SETTINGS_TEXT = {
     close: 'Close',
   },
   report: {
-    title: 'Schengen Tracker - Trip History Report',
+    title: 'Schengly - Trip History Report',
     generatedOn: 'Generated on:',
     summary: 'Total trips: {total} ({active} active, {archived} archived)',
     unnamedTrip: 'Unnamed Trip',

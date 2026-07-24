@@ -1,5 +1,5 @@
 export const APP_TEXT = {
-  headerTitle: 'Schengen Tracker',
+  headerTitle: 'Schengly',
   tabLabels: {
     overview: 'Overview',
     trips: 'Trips',
@@ -30,5 +30,5 @@ export const APP_TEXT = {
     restoreFailedTitle: 'Restore Failed',
     restoreFailedMessage: 'We could not restore purchases right now. Please try again later.',
   },
-  versionPrefix: 'Schengen Tracker v',
+  versionPrefix: 'Schengly v',
 };

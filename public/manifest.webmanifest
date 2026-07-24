@@ -1,6 +1,6 @@
 {
-  "name": "Schengen Tracker",
-  "short_name": "Schengen",
+  "name": "Schengly",
+  "short_name": "Schengly",
   "description": "Plan Schengen trips, track your 90/180-day allowance, and export travel history.",
   "start_url": "/",
   "scope": "/",

@@ -26,16 +26,6 @@ import { storage } from './utils/storage';
 import { APP_TEXT } from './content/ui/appText';
 import { AppThemeProvider, resolveTheme } from './theme/appTheme';
 import { SPACING } from './styles/spacing';
-import { MONETIZATION_CONFIG } from './config/monetization';
-import { billingService } from './utils/billing';
-import {
-  canCreateTrip,
-  createProEntitlements,
-  ENTITLEMENT_STORAGE_KEY,
-  EntitlementState,
-  getDefaultEntitlements,
-  sanitizeEntitlements,
-} from './utils/entitlements';
 
 const VALID_THEME_MODES: Settings['themeMode'][] = ['light', 'dark', 'system'];
 const VALID_DATE_FORMATS: Settings['dateFormat'][] = ['DD-MM-YYYY', 'MM-DD-YYYY', 'YYYY-MM-DD'];
@@ -134,9 +124,6 @@ function AppContent() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   const [initialFormCountry, setInitialFormCountry] = useState<string | null>(null);
-  const [entitlements, setEntitlements] = useState<EntitlementState>(getDefaultEntitlements());
-  const [proPriceLabel, setProPriceLabel] = useState<string>(MONETIZATION_CONFIG.proPriceLabel);
-  const [billingReady, setBillingReady] = useState<boolean>(false);
   const topInset = insets.top;
   const shellInsetStyle = {
     paddingLeft: insets.left,
@@ -157,11 +144,6 @@ function AppContent() {
         const storedSettings = await storage.getItem('schengen_settings');
         if (storedSettings) {
           setSettings(sanitizeSettings(JSON.parse(storedSettings)));
-        }
-
-        const storedEntitlements = await storage.getItem(ENTITLEMENT_STORAGE_KEY);
-        if (storedEntitlements) {
-          setEntitlements(sanitizeEntitlements(JSON.parse(storedEntitlements)));
         }
       } catch (e) {
         console.error("Failed to load data from storage", e);
@@ -191,156 +173,18 @@ function AppContent() {
     }
   };
 
-  const fillTemplate = (template: string, values: Record<string, string | number>) => {
-    return Object.entries(values).reduce((result, [key, value]) => result.replace(`{${key}}`, String(value)), template);
-  };
-
-  const persistEntitlements = async (nextEntitlements: EntitlementState) => {
-    setEntitlements(nextEntitlements);
-    try {
-      await storage.setItem(ENTITLEMENT_STORAGE_KEY, JSON.stringify(nextEntitlements));
-    } catch (e) {
-      console.error('Failed to save entitlements to storage', e);
-    }
-  };
-
-  const handleUnlockPro = async () => {
-    if (!billingReady) {
-      Alert.alert(APP_TEXT.alerts.billingUnavailableTitle, APP_TEXT.alerts.billingUnavailableMessage);
-      return;
-    }
-
-    try {
-      const purchaseResult = await billingService.purchasePro();
-      if (purchaseResult.cancelled) {
-        Alert.alert(APP_TEXT.alerts.purchaseCancelledTitle, APP_TEXT.alerts.purchaseCancelledMessage);
-        return;
-      }
-
-      if (!purchaseResult.purchased) {
-        Alert.alert(APP_TEXT.alerts.purchaseFailedTitle, APP_TEXT.alerts.purchaseFailedMessage);
-        return;
-      }
-
-      const nextEntitlements = createProEntitlements(new Date().toISOString());
-      await persistEntitlements(nextEntitlements);
-      Alert.alert(APP_TEXT.alerts.proUnlockedTitle, APP_TEXT.alerts.proUnlockedMessage);
-    } catch (error) {
-      console.error('Pro purchase failed', error);
-      Alert.alert(APP_TEXT.alerts.purchaseFailedTitle, APP_TEXT.alerts.purchaseFailedMessage);
-    }
-  };
-
-  const handleRestorePurchases = async () => {
-    if (!billingReady) {
-      Alert.alert(APP_TEXT.alerts.billingUnavailableTitle, APP_TEXT.alerts.billingUnavailableMessage);
-      return;
-    }
-
-    try {
-      const restored = await billingService.restoreProPurchase();
-      if (!restored) {
-        Alert.alert(APP_TEXT.alerts.restoreNoPurchaseTitle, APP_TEXT.alerts.restoreNoPurchaseMessage);
-        return;
-      }
-
-      if (entitlements.planTier !== 'pro') {
-        const nextEntitlements = createProEntitlements(new Date().toISOString());
-        await persistEntitlements(nextEntitlements);
-      }
-
-      Alert.alert(APP_TEXT.alerts.proUnlockedTitle, APP_TEXT.alerts.proUnlockedMessage);
-    } catch (error) {
-      console.error('Restore purchases failed', error);
-      Alert.alert(APP_TEXT.alerts.restoreFailedTitle, APP_TEXT.alerts.restoreFailedMessage);
-    }
-  };
-
-  const showProPaywall = () => {
-    Alert.alert(
-      APP_TEXT.alerts.freeLimitTitle,
-      fillTemplate(APP_TEXT.alerts.freeLimitMessage, {
-        limit: MONETIZATION_CONFIG.freeTripLimit,
-        price: MONETIZATION_CONFIG.proPriceLabel,
-      }),
-      [
-        {
-          text: APP_TEXT.alerts.cancelAction,
-          style: 'cancel',
-        },
-        {
-          text: APP_TEXT.alerts.freeLimitRestoreAction,
-          onPress: () => {
-            void handleRestorePurchases();
-          },
-        },
-        {
-          text: fillTemplate(APP_TEXT.alerts.freeLimitUnlockAction, { price: proPriceLabel }),
-          onPress: () => {
-            void handleUnlockPro();
-          },
-        },
-      ]
-    );
-  };
-
   const requestCreateTrip = (countryName?: string) => {
-    if (!canCreateTrip(trips.length, entitlements)) {
-      showProPaywall();
-      return;
-    }
-
     setEditingTrip(null);
     setInitialFormCountry(countryName ?? null);
     setCurrentTab('trips');
     setIsFormOpen(true);
   };
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function bootstrapBilling() {
-      const initResult = await billingService.initialize();
-      if (cancelled) {
-        return;
-      }
-
-      setBillingReady(initResult.isSupported);
-      setProPriceLabel(initResult.priceLabel);
-
-      if (!initResult.isSupported || entitlements.planTier === 'pro') {
-        return;
-      }
-
-      try {
-        const hasStorePro = await billingService.hasProAccessFromStore();
-        if (!hasStorePro || cancelled) {
-          return;
-        }
-
-        const nextEntitlements = createProEntitlements(new Date().toISOString());
-        await persistEntitlements(nextEntitlements);
-      } catch (error) {
-        console.error('Failed to sync store purchase status', error);
-      }
-    }
-
-    void bootstrapBilling();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [entitlements.planTier]);
-
   const handleSaveTrip = (trip: Trip) => {
     let newTrips = [];
     if (editingTrip) {
       newTrips = trips.map(t => t.id === trip.id ? trip : t);
     } else {
-      if (!canCreateTrip(trips.length, entitlements)) {
-        showProPaywall();
-        return;
-      }
       newTrips = [...trips, trip];
     }
     saveTrips(newTrips);
@@ -360,11 +204,6 @@ function AppContent() {
   };
 
   const handleImportTrips = (imported: Trip[]) => {
-    if (entitlements.planTier !== 'pro' && imported.length > MONETIZATION_CONFIG.freeTripLimit) {
-      showProPaywall();
-      return;
-    }
-
     saveTrips(imported);
   };
 
@@ -374,8 +213,6 @@ function AppContent() {
       await storage.removeItem('schengen_settings');
       setTrips([]);
       setSettings({ dateFormat: 'DD-MM-YYYY', themeMode: 'system' });
-      const refreshedEntitlements = sanitizeEntitlements(await storage.getItem(ENTITLEMENT_STORAGE_KEY).then((value) => value ? JSON.parse(value) : null));
-      setEntitlements(refreshedEntitlements);
       Alert.alert(APP_TEXT.alerts.successTitle, APP_TEXT.alerts.clearDataSuccess);
     } catch (e) {
       console.error(e);
@@ -458,14 +295,7 @@ function AppContent() {
       
       {/* Dynamic Top App Bar */}
       <View style={[styles.header, { height: 60 + topInset, paddingTop: topInset }]}>
-        <View style={styles.headerTitleRow}>
-          <Text style={styles.headerTitle}>{APP_TEXT.headerTitle}</Text>
-          {entitlements.planTier === 'pro' && (
-            <View style={styles.proBadge}>
-              <Text style={styles.proBadgeText}>PRO</Text>
-            </View>
-          )}
-        </View>
+        <Text style={styles.headerTitle}>{APP_TEXT.headerTitle}</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity
             onPress={() => { setCurrentTab('rules'); setIsFormOpen(false); }}
@@ -582,18 +412,6 @@ const createStyles = (theme: ReturnType<typeof resolveTheme>) => StyleSheet.crea
     fontWeight: '900',
     color: theme.colors.textPrimary,
     letterSpacing: -0.5,
-  },
-  proBadge: {
-    backgroundColor: theme.colors.accent,
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  proBadgeText: {
-    color: theme.colors.accentInverse,
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 0.6,
   },
   headerActions: {
     flexDirection: 'row',

@@ -14,9 +14,6 @@
         "backgroundColor": "#ffffff"
       }
     },
-    "plugins": [
-      "expo-iap"
-    ],
     "web": {
       "bundler": "metro"
     }

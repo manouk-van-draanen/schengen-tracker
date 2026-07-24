@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.1] - July 24, 2026
 - Rebranded the application to "Schengly"!
-- No functional or technical updates beyond rebranding were applied.
+- No functional or technical updates are included in this update beyond rebranding.
 
 ## [1.0.0] - July 23, 2026
 - The very first release of Schengly, built to make Schengen trip planning feel easy and clear!

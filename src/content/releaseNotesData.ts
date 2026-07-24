@@ -9,6 +9,14 @@ import { ReleaseNotesItem } from '../types';
 
 export const RELEASE_NOTES_DATA: ReleaseNotesItem[] = [
   {
+    version: "1.0.1",
+    date: "July 24, 2026",
+    changes: [
+      "Rebranded the application to \"Schengly\"!",
+      "No functional or technical updates are included in this update beyond rebranding.",
+    ],
+  },
+  {
     version: "1.0.0",
     date: "July 23, 2026",
     changes: [
@@ -20,4 +28,4 @@ export const RELEASE_NOTES_DATA: ReleaseNotesItem[] = [
   },
 ];
 
-export const APP_VERSION = "1.0.0";
+export const APP_VERSION = "1.0.1";

@@ -87,8 +87,6 @@ npm install
 npm run start
 ```
 
-For purchase testing, use a native iOS/Android build (development build, TestFlight, or internal testing track). Purchases are not available in Expo Go and web builds.
-
 ### Run Web Dev Server (Vite)
 
 ```bash

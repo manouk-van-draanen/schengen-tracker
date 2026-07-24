@@ -1,7 +1,7 @@
 {
   "name": "schengly",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "generate:release-notes": "node scripts/generateReleaseNotesData.mjs",
@@ -32,6 +32,7 @@
     "expo": "~54.0.0",
     "expo-document-picker": "^57.0.1",
     "expo-file-system": "^57.0.1",
+    "expo-iap": "^4.7.0",
     "expo-print": "^57.0.1",
     "expo-sharing": "^57.0.6",
     "express": "^4.21.2",

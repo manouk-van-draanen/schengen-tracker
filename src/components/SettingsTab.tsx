@@ -13,10 +13,6 @@ import {
   Pressable,
   Alert 
 } from 'react-native';
-import * as Print from 'expo-print';
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
-import * as DocumentPicker from 'expo-document-picker';
 import { Settings, Trip } from '../types';
 import { RELEASE_NOTES_DATA, APP_VERSION } from '../content/releaseNotesData';
 import { APP_TEXT } from '../content/ui/appText';
@@ -58,7 +54,11 @@ export default function SettingsTab({
   const [importSuccess, setImportSuccess] = useState(false);
   const [showDateFormatPicker, setShowDateFormatPicker] = useState(false);
   const [showThemeModePicker, setShowThemeModePicker] = useState(false);
-  const latestRelease = RELEASE_NOTES_DATA[0];
+  const latestRelease = RELEASE_NOTES_DATA[0] ?? {
+    version: APP_VERSION,
+    date: '',
+    changes: ['No release notes available for this build.'],
+  };
 
   const selectedDateFormat = DATE_FORMAT_OPTIONS.find(option => option.value === settings.dateFormat) ?? DATE_FORMAT_OPTIONS[0];
   const selectedThemeMode = THEME_MODE_OPTIONS.find(option => option.value === settings.themeMode) ?? THEME_MODE_OPTIONS[2];
@@ -96,6 +96,9 @@ export default function SettingsTab({
 
   const handleExportPDF = async () => {
     try {
+      const Print = await import('expo-print');
+      const FileSystem = await import('expo-file-system/legacy');
+      const Sharing = await import('expo-sharing');
       const activeTrips = trips.filter(t => !t.archived);
       const dateText = new Date().toLocaleDateString();
       const tableRows = trips.map((trip) => {
@@ -174,6 +177,8 @@ export default function SettingsTab({
 
   const handleExportCSV = async () => {
     try {
+      const FileSystem = await import('expo-file-system/legacy');
+      const Sharing = await import('expo-sharing');
       const csvContent = buildCsvContent();
       const filePath = `${FileSystem.cacheDirectory}schengen_tracker_trips_${new Date().toISOString().split('T')[0]}.csv`;
       await FileSystem.writeAsStringAsync(filePath, csvContent, {
@@ -260,6 +265,8 @@ export default function SettingsTab({
     setImportSuccess(false);
 
     try {
+      const DocumentPicker = await import('expo-document-picker');
+      const FileSystem = await import('expo-file-system/legacy');
       const picked = await DocumentPicker.getDocumentAsync({
         type: 'text/csv',
         multiple: false,
@@ -469,8 +476,10 @@ export default function SettingsTab({
                 <TouchableOpacity
                   key={option.value}
                   onPress={() => {
-                    setSettings({ ...settings, themeMode: option.value });
                     setShowThemeModePicker(false);
+                    setTimeout(() => {
+                      setSettings({ ...settings, themeMode: option.value });
+                    }, 0);
                   }}
                   style={styles.optionRow}
                 >
@@ -506,8 +515,10 @@ export default function SettingsTab({
                 <TouchableOpacity
                   key={option.value}
                   onPress={() => {
-                    setSettings({ ...settings, dateFormat: option.value });
                     setShowDateFormatPicker(false);
+                    setTimeout(() => {
+                      setSettings({ ...settings, dateFormat: option.value });
+                    }, 0);
                   }}
                   style={styles.optionRow}
                 >
